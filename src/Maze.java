@@ -11,7 +11,6 @@ public class Maze
     private int mazeWidth;
     private int mazeDepth;
 
-    // generates a maze using Kruskal's algorithm.
     /**
      * Generates a new maze using Kruskal's algorithm.
      * 
@@ -38,12 +37,6 @@ public class Maze
             }
         }
 
-        if (debug)
-        {
-            System.out.println("Maze cells created. Adding walls");
-            display();
-        }
-
         for (int row = 0; row < depth; row++)
         {
             for (int col = 0; col < width; col++)
@@ -64,10 +57,16 @@ public class Maze
             }
         }
 
-        if (debug)
+        for (int col = 0; col < mazeWidth; col++)
         {
-            System.out.println("Walls attached.");
-            display();
+            cells[0][col].north = new MazeWall(cells[0][col], null);
+            cells[mazeDepth - 1][col].south = new MazeWall(cells[mazeDepth - 1][col], null);
+        }
+
+        for (int row = 0; row < mazeDepth; row++)
+        {
+            cells[row][0].west = new MazeWall(cells[row][0], null);
+            cells[row][mazeDepth - 1].east = new MazeWall(cells[row][mazeDepth - 1], null);
         }
 
         // does the 4th index contain the 4th cell? Yup
@@ -80,6 +79,8 @@ public class Maze
             if (!inSameSet(allWalls.get(temp).a, allWalls.get(temp).b))
             {
                 combineSets(allWalls.get(temp).a, allWalls.get(temp).b);
+                allWalls.get(temp).path = true;
+
             }
 
             allWalls.remove(temp);
@@ -128,8 +129,8 @@ public class Maze
                     s.append('X'); // corners between vertexes are automatically unpathable
 
                     // If there is a path there, mark it as a star, otherwise as an X
-                    if (cells[row][col].north != null)
-                        s.append('*');
+                    if (cells[row][col].north.path)
+                        s.append(' ');
                     else
                         s.append('X');
 
@@ -141,25 +142,25 @@ public class Maze
                         s.append('|');
                         s.append('\n');
                         s.append('|');
-                        col = -1; // will be incremented immediately to 0 via j++.
+                        col = -1; // will be incremented immediately to 0 via col++.
                     }
                 }
                 else
                 // if(!flag)
                 {
                     // If there is a path there, mark it as a star, otherwise as an X
-                    if (cells[row][col].west != null)
-                        s.append('*');
+                    if (cells[row][col].west.path)
+                        s.append(' ');
                     else
                         s.append('X');
 
                     // mark the location of a vertex.
-                    s.append('V');
+                    s.append('_');
 
                     if (col == mazeWidth - 1)
                     {
-                        if (cells[row][col].east != null)
-                            s.append('*');
+                        if (cells[row][col].east.path)
+                            s.append(' ');
                         else
                             s.append('X');
                         flag = true;
@@ -177,8 +178,8 @@ public class Maze
         {
             s.append('X');
 
-            if (cells[mazeDepth - 1][i].south != null)
-                s.append('*');
+            if (cells[mazeDepth - 1][i].south.path)
+                s.append(' ');
             else
                 s.append('X');
         }
@@ -273,6 +274,18 @@ public class Maze
         {
             x = horiztonalCoordinate;
             y = verticalCoordinate;
+        }
+
+        private void destroyWall(MazeWall m)
+        {
+            if (m.equals(north))
+                north = null;
+            else if (m.equals(south))
+                south = null;
+            else if (m.equals(east))
+                east = null;
+            else if (m.equals(west))
+                west = null;
         }
 
         private MazeWall getDirectionOfWall(MazeWall m)
