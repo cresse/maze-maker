@@ -12,22 +12,29 @@ public class Maze
     private int mazeDepth;
 
     // generates a maze using Kruskal's algorithm.
+    /**
+     * Generates a new maze using Kruskal's algorithm.
+     * 
+     * @param width the width of the maze
+     * @param depth the depth of the maze
+     * @param debug Whether or not to show the maze being generated.
+     */
     public Maze(int width, int depth, boolean debug)
     {
         allWalls = new ArrayList<>();
         setsOfCells = new ArrayList<Set<MazeCell>>();
 
-        cells = new MazeCell[width][depth];
+        cells = new MazeCell[depth][width];
         mazeWidth = width;
         mazeDepth = depth;
 
-        for (int i = 0; i < width; i++)
+        for (int row = 0; row < depth; row++)
         {
-            for (int j = 0; j < depth; j++)
+            for (int col = 0; col < width; col++)
             {
-                cells[i][j] = new MazeCell(i, j);
+                cells[row][col] = new MazeCell(row, col);
                 setsOfCells.add(new HashSet<MazeCell>());
-                setsOfCells.get(setsOfCells.size() - 1).add(cells[i][j]);
+                setsOfCells.get(setsOfCells.size() - 1).add(cells[row][col]);
             }
         }
 
@@ -37,22 +44,22 @@ public class Maze
             display();
         }
 
-        for (int i = 0; i < width; i++)
+        for (int row = 0; row < depth; row++)
         {
-            for (int j = 0; j < depth; j++)
+            for (int col = 0; col < width; col++)
             {
-                if (!(i + 1 == width))
+                if (!(row + 1 == depth))
                 {
-                    cells[i][j].east = new MazeWall(cells[i][j], cells[i + 1][j]);
-                    cells[i + 1][j].west = cells[i][j].east;
-                    allWalls.add(cells[i][j].east);
+                    cells[row][col].south = new MazeWall(cells[row][col], cells[row + 1][col]);
+                    cells[row + 1][col].north = cells[row][col].south;
+                    allWalls.add(cells[row][col].south);
                 }
 
-                if (!(j + 1 == depth))
+                if (!(col + 1 == width))
                 {
-                    cells[i][j].south = new MazeWall(cells[i][j], cells[i][j + 1]);
-                    cells[i][j + 1].north = cells[i][j].south;
-                    allWalls.add(cells[i][j].south);
+                    cells[row][col].east = new MazeWall(cells[row][col], cells[row][col + 1]);
+                    cells[row][col + 1].west = cells[row][col].east;
+                    allWalls.add(cells[row][col].east);
                 }
             }
         }
@@ -110,10 +117,10 @@ public class Maze
         s.append('+');
         s.append('\n');
 
-        for (int i = 0; i < mazeDepth; i++)
+        for (int row = 0; row < mazeDepth; row++)
         {
             s.append('|'); // new frame piece at the beginning of the line
-            for (int j = 0; j < mazeWidth; j++)
+            for (int col = 0; col < mazeWidth; col++)
             {
                 // If we're on the line where we're looking at what's above a vertex.
                 if (flag)
@@ -121,27 +128,27 @@ public class Maze
                     s.append('X'); // corners between vertexes are automatically unpathable
 
                     // If there is a path there, mark it as a star, otherwise as an X
-                    if (cells[i][j].north != null)
+                    if (cells[row][col].north != null)
                         s.append('*');
                     else
                         s.append('X');
 
                     // The first time we reach the end of the line in a loop
-                    if (j == mazeWidth - 1)
+                    if (col == mazeWidth - 1)
                     {
                         flag = false;
                         s.append('X');
                         s.append('|');
                         s.append('\n');
                         s.append('|');
-                        j = -1; // will be incremented immediately to 0 via j++.
+                        col = -1; // will be incremented immediately to 0 via j++.
                     }
                 }
                 else
                 // if(!flag)
                 {
                     // If there is a path there, mark it as a star, otherwise as an X
-                    if (cells[i][j].west != null)
+                    if (cells[row][col].west != null)
                         s.append('*');
                     else
                         s.append('X');
@@ -149,9 +156,9 @@ public class Maze
                     // mark the location of a vertex.
                     s.append('V');
 
-                    if (j == mazeWidth - 1)
+                    if (col == mazeWidth - 1)
                     {
-                        if (cells[i][j].east != null)
+                        if (cells[row][col].east != null)
                             s.append('*');
                         else
                             s.append('X');
@@ -170,7 +177,7 @@ public class Maze
         {
             s.append('X');
 
-            if (cells[i][mazeWidth - 1].south != null)
+            if (cells[mazeDepth - 1][i].south != null)
                 s.append('*');
             else
                 s.append('X');
@@ -237,7 +244,7 @@ public class Maze
             b = secondCell;
         }
 
-        public MazeCell getOtherCell(MazeCell curCell)
+        protected MazeCell getOtherCell(MazeCell curCell)
         {
             return a.equals(curCell) ? a : b;
         }
