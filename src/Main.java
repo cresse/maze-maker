@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import java.util.Stack;
 
 /**
  * Creates a maze using Kruskal's Algorithm. Solves it too.
  * 
+=======
+/**
+ * Creates a maze.
+>>>>>>> master
  * @author Robert Ferguson
  * @author Ian Cresse
  *
@@ -10,6 +15,7 @@ import java.util.Stack;
 public class Main
 {
     /**
+<<<<<<< HEAD
      * Makes and solves a maze!
      * 
      * @param args Command line arguments. Unused in this program.
@@ -79,5 +85,13 @@ public class Main
         }
 
         theMaze.display();
+=======
+     * Instantiates the maze's constructor, which runs everything.
+     * @param args Command line arguments. None expected.
+     */
+    public static void main(String[] args)
+    {
+        new Maze(10, 10, false);
+>>>>>>> master
     }
 }
