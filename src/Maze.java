@@ -3,12 +3,24 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Maze builds a maze of the provided size and generates paths based on Kruskal's algorithm.
+ * 
+ * @author Robert Ferguson - Primary coder, design, bug squashing
+ * @author Ian Cresse - Design, code, code review
+ *
+ */
 public class Maze
 {
+    /** The maze, represented as a 2D matrix. */
     private MazeCell[][] cells;
+    /** Initially all walls in the maze. Gets smaller as paths are made. */
     private List<MazeWall> allWalls;
+    /** A list of the set of cells that have paths. Initially has each cell in their own set. Goes down to 1 set.*/
     private List<Set<MazeCell>> setsOfCells;
+    /** The width of the maze. */
     private int mazeWidth;
+    /** The depth of the maze. */
     private int mazeDepth;
 
     /**
@@ -26,7 +38,8 @@ public class Maze
         cells = new MazeCell[depth][width];
         mazeWidth = width;
         mazeDepth = depth;
-
+        
+        //Makes a cell at every index of the matrix.
         for (int row = 0; row < depth; row++)
         {
             for (int col = 0; col < width; col++)
@@ -37,6 +50,8 @@ public class Maze
             }
         }
 
+        //Adds walls to the south and the east if possible. When a wall is made,
+        //the wall connecting the vertices gains a reference to the same wall.
         for (int row = 0; row < depth; row++)
         {
             for (int col = 0; col < width; col++)
@@ -57,21 +72,28 @@ public class Maze
             }
         }
 
+        //Adds walls to the north of the top level of the maze (not handled in the above loops)
         for (int col = 0; col < mazeWidth; col++)
         {
             cells[0][col].north = new MazeWall(cells[0][col], null);
             cells[mazeDepth - 1][col].south = new MazeWall(cells[mazeDepth - 1][col], null);
         }
 
+        //Adds walls to the leftmost side of the maze.
         for (int row = 0; row < mazeDepth; row++)
         {
             cells[row][0].west = new MazeWall(cells[row][0], null);
             cells[row][mazeDepth - 1].east = new MazeWall(cells[row][mazeDepth - 1], null);
         }
+        
+        //Displays maze with all walls.
+        if (debug) display();
 
+        // Quick check to make sure cells have walls in expected positions
         // does the 4th index contain the 4th cell? Yup
         // System.out.println(setsOfCells.get(3).contains(cells[1][0]));
 
+        //Randomly choose a wall and remove it if the cells connected to it are not in the same set.
         while (allWalls.size() > 0)
         {
             int temp = (int) (Math.random() * allWalls.size());
@@ -92,24 +114,27 @@ public class Maze
             // System.out.println("Removed a wall! " + (temp));
         }
         // System.out.println("Maze complete, but it sucks!");
+        display();
     }
 
+    /**
+     * Displays the wall in its current form.
+     */
     public void display()
     {
         System.out.println(toString());
         System.out.println();
     }
 
-    public MazeCell getMazeStart()
-    {
-        return cells[0][0];
-    }
-
+    /**
+     * Builds the maze. -, | and + indicate boundaries around the maze.
+     * X indicates unpathable terrain. A space indicates a viable path.
+     */
     public String toString()
     {
         StringBuilder s = new StringBuilder();
         boolean flag = true;
-
+        //topmost row
         s.append('+');
 
         for (int i = 0; i < (mazeWidth * 2) + 1; i++)
@@ -128,7 +153,7 @@ public class Maze
                 {
                     s.append('X'); // corners between vertexes are automatically unpathable
 
-                    // If there is a path there, mark it as a star, otherwise as an X
+                    // If there is a path there, mark it as a space, otherwise as an X
                     if (cells[row][col].north.path)
                         s.append(' ');
                     else
@@ -148,14 +173,14 @@ public class Maze
                 else
                 // if(!flag)
                 {
-                    // If there is a path there, mark it as a star, otherwise as an X
+                    // If there is a path there, mark it as a space, otherwise as an X
                     if (cells[row][col].west.path)
-                        s.append(' ');
+                        s.append(' '); //s.append('_'); //for vertex visibility
                     else
                         s.append('X');
 
                     // mark the location of a vertex.
-                    s.append('_');
+                    s.append(' ');
 
                     if (col == mazeWidth - 1)
                     {
@@ -186,9 +211,9 @@ public class Maze
         s.append('X');
         s.append('|');
         s.append('\n');
-
+        //bottom most row
         s.append('+');
-
+        
         for (int i = 0; i < (mazeWidth * 2) + 1; i++)
             s.append('-');
 
@@ -197,6 +222,12 @@ public class Maze
         return s.toString();
     }
 
+    /**
+     * Returns whether the two MazeCells are in the same set or not (thus should not be removed)
+     * @param first The first MazeCell
+     * @param second The second MazeCell
+     * @return whether the two MazeCells are in the same set
+     */
     private boolean inSameSet(MazeCell first, MazeCell second)
     {
         for (int i = 0; i < setsOfCells.size(); i++)
@@ -212,8 +243,8 @@ public class Maze
     /**
      * Finds the indexes of two Cells in the setsOfCells list and then combines the sets.
      * 
-     * @param a
-     * @param b
+     * @param a The first MazeCell
+     * @param b The second MazeCell
      */
     private void combineSets(MazeCell a, MazeCell b)
     {
@@ -221,7 +252,6 @@ public class Maze
         int indexOfSecond = 0;
 
         // Find the indexes of the cells we want to remove
-
         while (!setsOfCells.get(indexOfFirst).contains(a))
             indexOfFirst++;
 
@@ -233,23 +263,35 @@ public class Maze
         setsOfCells.remove(indexOfSecond);
     }
 
+    /**
+     * MazeWall represents the boundary between two MazeCells.
+     * @author Robert Ferguson
+     * @author Ian Cresse
+     *
+     */
     private class MazeWall
     {
+        /** The head of the wall. */
         protected MazeCell a;
+        /** The tail of the wall. */
         protected MazeCell b;
+        /** Whether the maze is part of the path or not. */
         protected boolean path = false;
 
+        /**
+         * Constructs a wall between two MazeCells
+         * @param firstCell the first cell
+         * @param secondCell the second cell
+         */
         public MazeWall(MazeCell firstCell, MazeCell secondCell)
         {
             a = firstCell;
             b = secondCell;
         }
 
-        protected MazeCell getOtherCell(MazeCell curCell)
-        {
-            return a.equals(curCell) ? a : b;
-        }
-
+        /**
+         * Returns a coordinate of both MazeCell's coordinates.
+         */
         public String toString()
         {
             return "[" + a.toString() + " " + b.toString() + "]";
@@ -257,51 +299,42 @@ public class Maze
 
     }
 
+    /**
+     * Represents a vertex in the maze. Has walls in the cardinal directions.
+     * @author Robert Ferguson
+     * @author Ian Cresse
+     *
+     */
     private class MazeCell
     {
-        protected boolean frontier;
-        protected boolean used;
-
+        /** The x coordinate. */
         protected int x;
+        /** The y coordinate. */
         protected int y;
 
+        /** The wall to the north. */
         protected MazeWall north;
+        /** The wall to the south. */
         protected MazeWall south;
+        /** The wall to the east. */
         protected MazeWall east;
+        /** The wall to the west. */
         protected MazeWall west;
 
+        /**
+         * The cell's position within the matrix.
+         * @param horiztonalCoordinate the horizontal coordinate.
+         * @param verticalCoordinate the vertical coordinate.
+         */
         public MazeCell(int horiztonalCoordinate, int verticalCoordinate)
         {
             x = horiztonalCoordinate;
             y = verticalCoordinate;
         }
-
-        private void destroyWall(MazeWall m)
-        {
-            if (m.equals(north))
-                north = null;
-            else if (m.equals(south))
-                south = null;
-            else if (m.equals(east))
-                east = null;
-            else if (m.equals(west))
-                west = null;
-        }
-
-        private MazeWall getDirectionOfWall(MazeWall m)
-        {
-            if (m.equals(north))
-                return north;
-            else if (m.equals(south))
-                return south;
-            else if (m.equals(east))
-                return east;
-            else if (m.equals(west))
-                return west;
-            else
-                return null;
-        }
-
+        
+        /**
+         * Returns the coordinate position in the matrix in the maze.
+         */
         public String toString()
         {
             return "(" + x + ", " + y + ")";
