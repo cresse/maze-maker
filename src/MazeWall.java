@@ -33,5 +33,4 @@ public class MazeWall
     {
         return "[" + first.toString() + " " + second.toString() + "]";
     }
-
 }

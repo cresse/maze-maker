@@ -47,30 +47,45 @@ public class MazeCell
         return "(" + x + ", " + y + ")";
     }
 
+    /**
+     * Get's a list of all cells adjacent to the current cell.
+     * 
+     * @return A List.
+     */
     public List<MazeCell> getAdjacentCells()
     {
         ArrayList<MazeCell> returnable = new ArrayList<>();
 
-        if (north.path)
-            returnable.add(getOtherCell(north));
-
-        if (south.path)
-            returnable.add(getOtherCell(south));
-
         if (west.path)
             returnable.add(getOtherCell(west));
+
+        if (north.path)
+            returnable.add(getOtherCell(north));
 
         if (east.path)
             returnable.add(getOtherCell(east));
 
+        if (south.path)
+            returnable.add(getOtherCell(south));
+
         return returnable;
     }
 
+    /**
+     * Given a wall, returns reference to the cell that is not this one.
+     * 
+     * @param wall The wall to check
+     * @return
+     */
     private MazeCell getOtherCell(MazeWall wall)
     {
         return wall.first.equals(this) ? wall.second : wall.first;
     }
 
+    /**
+     * Returns if two cells are equal. They're considered equal if they share x values and y
+     * values.
+     */
     public boolean equals(Object obj)
     {
         if (obj != null && obj instanceof MazeCell)

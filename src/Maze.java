@@ -3,17 +3,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-// TODO equals method for MazeCell
-// TODO Start of the maze
-// TODO isEndOfMaze(MazeCell m)
-// TODO A stack
-
 /**
  * Maze builds a maze of the provided size and generates paths based on Kruskal's algorithm.
  * 
- * @author Robert Ferguson - Primary coder, design, bug squashing
- * @author Ian Cresse - Design, code, code review
- *
+ * @author Robert Ferguson - Primary coder, primary bug implementer, primary bug remover
+ * @author Ian Cresse - Design, code, code review, documentation
  */
 public class Maze
 {
@@ -33,6 +27,8 @@ public class Maze
     /** The width of the maze. */
     private int mazeWidth;
 
+    public final boolean debug;
+    
     /**
      * Generates a new maze using Kruskal's algorithm.
      * 
@@ -48,6 +44,7 @@ public class Maze
         cells = new MazeCell[depth][width];
         mazeWidth = width;
         mazeDepth = depth;
+        this.debug = debug;
 
         // Makes a cell at every index of the matrix.
         for (int row = 0; row < depth; row++)
@@ -82,15 +79,16 @@ public class Maze
             }
         }
 
-        // Adds walls to the north of the top level of the maze (not handled in the above
-        // loops)
+        // Adds walls to the north of the top level of the maze and to the south of the bottom
+        // level
         for (int col = 0; col < mazeWidth; col++)
         {
             cells[0][col].north = new MazeWall(cells[0][col], null);
             cells[mazeDepth - 1][col].south = new MazeWall(cells[mazeDepth - 1][col], null);
         }
 
-        // Adds walls to the leftmost side of the maze.
+        // Adds west walls to the leftmost cells and east walls to the rightmost side of the
+        // maze.
         for (int row = 0; row < mazeDepth; row++)
         {
             cells[row][0].west = new MazeWall(cells[row][0], null);
@@ -105,7 +103,8 @@ public class Maze
         // does the 4th index contain the 4th cell? Yup
         // System.out.println(setsOfCells.get(3).contains(cells[1][0]));
 
-        // Randomly choose a wall and remove it if the cells connected to it are not in the
+        // Randomly choose a wall and mark it as path if the cells connected to it are not in
+        // the
         // same set.
         // short circuits on setsOfCells.size == 1
         while (allWalls.size() > 0 && setsOfCells.size() > 1)
@@ -116,14 +115,12 @@ public class Maze
             {
                 combineSets(allWalls.get(temp).first, allWalls.get(temp).second);
                 allWalls.get(temp).path = true;
-
             }
 
             allWalls.remove(temp);
 
             if (debug)
                 display();
-
             // System.out.println("Removed a wall! " + (temp));
         }
         // System.out.println("Maze complete, but it sucks!");
@@ -140,13 +137,15 @@ public class Maze
     }
 
     /**
-     * Builds the maze. -, | and + indicate boundaries around the maze.
-     * X indicates unpathable terrain. A space indicates a viable path or a vertex that has yet
+     * Builds the maze. -, | and + indicate boundaries around the maze and are not part of the
+     * maze.
+     * X indicates a wall. A space indicates a path or a vertex that has yet
      * to be visited.
      * V indicates a visited vertex.
      */
     public String toString()
     {
+        // I hate this method so much.
         StringBuilder s = new StringBuilder();
         boolean flag = true;
         // topmost row
@@ -186,7 +185,6 @@ public class Maze
                     }
                 }
                 else
-                // if(!flag)
                 {
                     // If there is a path there, mark it as a space, otherwise as an X
                     if (cells[row][col].west.path)
@@ -283,13 +281,24 @@ public class Maze
         setsOfCells.remove(indexOfSecond);
     }
 
+    /**
+     * Gives reference to the start of the maze.
+     * 
+     * @return
+     */
     public MazeCell getStart()
     {
         return cells[0][0];
     }
 
-    public boolean isMazeEnd(MazeCell m)
+    /**
+     * Checks to see if a MazeCell is the end of the maze.
+     * 
+     * @param cell The cell.
+     * @return Whether or not it's the end.
+     */
+    public boolean isMazeEnd(MazeCell cell)
     {
-        return m.equals(cells[mazeDepth - 1][mazeWidth - 1]);
+        return cell.equals(cells[mazeDepth - 1][mazeWidth - 1]);
     }
 }

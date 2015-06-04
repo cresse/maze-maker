@@ -1,7 +1,7 @@
 import java.util.Stack;
 
 /**
- * Creates a maze.
+ * Creates a maze using Kruskal's Algorithm. Solves it too.
  * 
  * @author Robert Ferguson
  * @author Ian Cresse
@@ -18,8 +18,8 @@ public class Main
     {
         // testMakingMazes();
         // makeMazeWDebug();
-         new Maze(5, 5, true);
-         solveMaze(new Maze(9, 6, false));
+        // new Maze(5, 5, true);
+        solveMaze(new Maze(12, 8, false));
     }
 
     /**
@@ -47,30 +47,37 @@ public class Main
         new Maze(10, 10, true);
     }
 
-    private static void solveMaze(Maze m)
+    /**
+     * Solves a maze using a Depth first search.
+     * 
+     * @param theMaze The maze to solve.
+     */
+    private static void solveMaze(Maze theMaze)
     {
-        MazeCell start = m.getStart();
+        MazeCell start = theMaze.getStart();
 
-        Stack<MazeCell> stack = new Stack<>();
+        Stack<MazeCell> solver = new Stack<>();
 
-        stack.push(start);
+        solver.push(start);
 
-        while (!stack.isEmpty() && !m.isMazeEnd(stack.peek()))
+        while (!solver.isEmpty() && !theMaze.isMazeEnd(solver.peek()))
         {
-            MazeCell temp = stack.pop();
+            MazeCell temp = solver.pop();
             if (!temp.visited)
             {
-                stack.addAll(temp.getAdjacentCells());
+                solver.addAll(temp.getAdjacentCells());
                 temp.visited = true;
-                m.display();
+
+                if (theMaze.debug)
+                    theMaze.display();
             }
         }
 
-        if (m.isMazeEnd(stack.peek()))
+        if (theMaze.isMazeEnd(solver.peek()))
         {
-            stack.peek().visited = true;
+            solver.peek().visited = true;
         }
 
-        m.display();
+        theMaze.display();
     }
 }
