@@ -6,8 +6,10 @@ import java.util.Set;
 public class Maze
 {
     private MazeCell[][] cells;
-    List<MazeWall> allWalls;
-    List<Set<MazeCell>> setsOfCells;
+    private List<MazeWall> allWalls;
+    private List<Set<MazeCell>> setsOfCells;
+    private int mazeWidth;
+    private int mazeDepth;
 
     // generates a maze using Kruskal's algorithm.
     public Maze(int width, int depth, boolean debug)
@@ -16,6 +18,8 @@ public class Maze
         setsOfCells = new ArrayList<Set<MazeCell>>();
 
         cells = new MazeCell[width][depth];
+        mazeWidth = width;
+        mazeDepth = depth;
 
         for (int i = 0; i < width; i++)
         {
@@ -25,6 +29,12 @@ public class Maze
                 setsOfCells.add(new HashSet<MazeCell>());
                 setsOfCells.get(setsOfCells.size() - 1).add(cells[i][j]);
             }
+        }
+
+        if (debug)
+        {
+            System.out.println("Maze cells created. Adding walls");
+            display();
         }
 
         for (int i = 0; i < width; i++)
@@ -47,43 +57,148 @@ public class Maze
             }
         }
 
-        System.out.println("Done!~");
-        // does the 4th index contain the 4th cell?
+        if (debug)
+        {
+            System.out.println("Walls attached.");
+            display();
+        }
+
+        // does the 4th index contain the 4th cell? Yup
         // System.out.println(setsOfCells.get(3).contains(cells[1][0]));
 
         while (allWalls.size() > 0)
         {
             int temp = (int) (Math.random() * allWalls.size());
 
-            if (inSameSet(allWalls.get(temp).a, allWalls.get(temp).b))
+            if (!inSameSet(allWalls.get(temp).a, allWalls.get(temp).b))
             {
                 combineSets(allWalls.get(temp).a, allWalls.get(temp).b);
             }
 
             allWalls.remove(temp);
-             System.out.println("Removed a wall! " + (temp));
+
+            if (debug)
+            {
+                display();
+            }
+            // System.out.println("Removed a wall! " + (temp));
         }
         // System.out.println("Maze complete, but it sucks!");
     }
 
     public void display()
     {
+        System.out.println(toString());
+        System.out.println();
+    }
 
+    public MazeCell getMazeStart()
+    {
+        return cells[0][0];
+    }
+
+    public String toString()
+    {
+        StringBuilder s = new StringBuilder();
+        boolean flag = true;
+
+        s.append('+');
+
+        for (int i = 0; i < (mazeWidth * 2) + 1; i++)
+            s.append('-');
+
+        s.append('+');
+        s.append('\n');
+
+        for (int i = 0; i < mazeDepth; i++)
+        {
+            s.append('|'); // new frame piece at the beginning of the line
+            for (int j = 0; j < mazeWidth; j++)
+            {
+                // If we're on the line where we're looking at what's above a vertex.
+                if (flag)
+                {
+                    s.append('X'); // corners between vertexes are automatically unpathable
+
+                    // If there is a path there, mark it as a star, otherwise as an X
+                    if (cells[i][j].north != null)
+                        s.append('*');
+                    else
+                        s.append('X');
+
+                    // The first time we reach the end of the line in a loop
+                    if (j == mazeWidth - 1)
+                    {
+                        flag = false;
+                        s.append('X');
+                        s.append('|');
+                        s.append('\n');
+                        s.append('|');
+                        j = -1; // will be incremented immediately to 0 via j++.
+                    }
+                }
+                else
+                // if(!flag)
+                {
+                    // If there is a path there, mark it as a star, otherwise as an X
+                    if (cells[i][j].west != null)
+                        s.append('*');
+                    else
+                        s.append('X');
+
+                    // mark the location of a vertex.
+                    s.append('V');
+
+                    if (j == mazeWidth - 1)
+                    {
+                        if (cells[i][j].east != null)
+                            s.append('*');
+                        else
+                            s.append('X');
+                        flag = true;
+                    }
+                }
+            }
+            s.append('|');
+            s.append('\n');
+        }
+
+        s.append('|');
+
+        // go over the south walls of the very last row
+        for (int i = 0; i < mazeWidth; i++)
+        {
+            s.append('X');
+
+            if (cells[i][mazeWidth - 1].south != null)
+                s.append('*');
+            else
+                s.append('X');
+        }
+        s.append('X');
+        s.append('|');
+        s.append('\n');
+
+        s.append('+');
+
+        for (int i = 0; i < (mazeWidth * 2) + 1; i++)
+            s.append('-');
+
+        s.append('+');
+
+        return s.toString();
     }
 
     private boolean inSameSet(MazeCell first, MazeCell second)
     {
-        boolean temp = false;
-
         for (int i = 0; i < setsOfCells.size(); i++)
         {
-            if (setsOfCells.get(i).contains(first) && setsOfCells.get(i).contains(first))
+            if (setsOfCells.get(i).contains(first) && setsOfCells.get(i).contains(second))
             {
-                temp = true;
-                break;
+                return true;
             }
         }
-        return temp;
+        return false;
     }
 
     /**
@@ -97,10 +212,13 @@ public class Maze
         int indexOfFirst = 0;
         int indexOfSecond = 0;
 
+        // Find the indexes of the cells we want to remove
+
         while (!setsOfCells.get(indexOfFirst).contains(a))
             indexOfFirst++;
 
-        while (!setsOfCells.get(indexOfSecond).contains(b))
+        while (indexOfSecond < setsOfCells.size()
+                && !setsOfCells.get(indexOfSecond).contains(b))
             indexOfSecond++;
 
         setsOfCells.get(indexOfFirst).addAll(setsOfCells.get(indexOfSecond));
@@ -111,6 +229,7 @@ public class Maze
     {
         protected MazeCell a;
         protected MazeCell b;
+        protected boolean path = false;
 
         public MazeWall(MazeCell firstCell, MazeCell secondCell)
         {
@@ -147,6 +266,20 @@ public class Maze
         {
             x = horiztonalCoordinate;
             y = verticalCoordinate;
+        }
+
+        private MazeWall getDirectionOfWall(MazeWall m)
+        {
+            if (m.equals(north))
+                return north;
+            else if (m.equals(south))
+                return south;
+            else if (m.equals(east))
+                return east;
+            else if (m.equals(west))
+                return west;
+            else
+                return null;
         }
 
         public String toString()
